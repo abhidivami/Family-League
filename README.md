@@ -127,7 +127,7 @@ IPL-style standings: Win = 2 pts, Tie / No Result = 1 pt, Loss = 0 pts.
 
 ## Tech Stack
 
-- **Java 25** · **Spring Boot 4** · **Spring Security 7** (JWT, BCrypt)
+- **Java 21** · **Spring Boot 4** · **Spring Security 7** (JWT, BCrypt)
 - **PostgreSQL** · **Spring Data JPA** · **Hibernate 7** · **Flyway 11**
 - **SpringDoc OpenAPI 2** · **Spring Boot Actuator**
 
