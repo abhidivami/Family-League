@@ -25,6 +25,13 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Manages {@link com.familyleague.team.entity.Team} records and their registration in seasons.
+ *
+ * <p>A Team is a global entity (e.g., "Mumbai Indians") that can participate in
+ * multiple seasons via {@link com.familyleague.season.entity.SeasonTeam} join records.
+ * Team names are unique (case-insensitive) across active (non-deleted) records.
+ */
 @Service
 @RequiredArgsConstructor
 public class TeamService {
@@ -37,6 +44,9 @@ public class TeamService {
     private final PlayerRepository playerRepository;
     private final SeasonService seasonService;
 
+    /**
+     * Create a new team. Rejects duplicate names (case-insensitive) with 409.
+     */
     @Transactional
     public TeamResponse createTeam(TeamRequest req) {
         if (teamRepository.existsByNameIgnoreCaseAndDeletedAtIsNull(req.name())) {
@@ -52,6 +62,7 @@ public class TeamService {
         return TeamResponse.from(teamRepository.save(team));
     }
 
+    /** Search teams by name (case-insensitive) or list all active teams if search is blank. */
     public Page<TeamResponse> listTeams(String search, Pageable pageable) {
         if (StringUtils.hasText(search)) {
             return teamRepository

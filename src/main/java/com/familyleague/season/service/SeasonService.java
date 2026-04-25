@@ -20,6 +20,14 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.UUID;
 
+/**
+ * Manages the lifecycle of a {@link com.familyleague.season.entity.Season}.
+ *
+ * <p>State machine: {@code CREATED → ACTIVE → CLOSED}.
+ * Only ACTIVE seasons accept new matches, squad changes and predictions.
+ * Closing a season triggers async season-prediction scoring via
+ * {@link com.familyleague.leaderboard.service.ScoreCalculationService}.
+ */
 @Service
 @RequiredArgsConstructor
 public class SeasonService {
@@ -28,6 +36,7 @@ public class SeasonService {
     private final LeagueRepository leagueRepository;
     private final ScoreCalculationService scoreCalculationService;
 
+    /** Create a new season in CREATED state under the given league. */
     @Transactional
     public SeasonResponse create(UUID leagueId, SeasonRequest req) {
         League league = leagueRepository.findById(leagueId)
@@ -46,6 +55,7 @@ public class SeasonService {
         return SeasonResponse.from(seasonRepository.save(season));
     }
 
+    /** Paginated list of seasons for a league. */
     public Page<SeasonResponse> listByLeague(UUID leagueId, Pageable pageable) {
         return seasonRepository.findByLeague_IdAndDeletedAtIsNull(leagueId, pageable)
                 .map(SeasonResponse::from);
@@ -55,6 +65,7 @@ public class SeasonService {
         return SeasonResponse.from(findOrThrow(id));
     }
 
+    /** Transition season from CREATED → ACTIVE. */
     @Transactional
     public SeasonResponse activate(UUID id) {
         Season season = findOrThrow(id);
@@ -65,6 +76,11 @@ public class SeasonService {
         return SeasonResponse.from(seasonRepository.save(season));
     }
 
+    /**
+     * Transition season from ACTIVE → CLOSED.
+     * Triggers async season-prediction score calculation after the transaction commits,
+     * ensuring the updated status is visible to the async thread.
+     */
     @Transactional
     public SeasonResponse close(UUID id) {
         Season season = findOrThrow(id);
@@ -82,6 +98,7 @@ public class SeasonService {
         return response;
     }
 
+    /** Load a non-deleted season or throw {@link com.familyleague.common.exception.ResourceNotFoundException}. */
     public Season findOrThrow(UUID id) {
         return seasonRepository.findById(id)
                 .filter(s -> !s.isDeleted())

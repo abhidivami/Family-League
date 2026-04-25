@@ -31,6 +31,19 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+/**
+ * Core service for match management.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Creating matches and computing {@code predictionLockAt} from season config</li>
+ *   <li>Managing the Playing XI (11 players per team per match)</li>
+ *   <li>Publishing match results and triggering async score recalculation</li>
+ * </ul>
+ *
+ * Score calculation is fired inside a {@link TransactionSynchronization#afterCommit()} callback
+ * so the result row is committed and visible to the async thread before it reads.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -44,6 +57,10 @@ public class MatchService {
     private final SeasonService seasonService;
     private final ScoreCalculationService scoreCalculationService;
 
+    /**
+     * Create a match in an open season.
+     * {@code predictionLockAt} is derived as {@code scheduledAt - season.matchLockHours}.
+     */
     @Transactional
     public MatchResponse createMatch(UUID seasonId, MatchRequest req) {
         Season season = seasonService.findOrThrow(seasonId);
@@ -77,11 +94,13 @@ public class MatchService {
         return MatchResponse.from(matchRepository.save(match));
     }
 
+    /** Paginated list of non-deleted matches for a season. */
     public Page<MatchResponse> listBySeason(UUID seasonId, Pageable pageable) {
         return matchRepository.findBySeason_IdAndDeletedAtIsNull(seasonId, pageable)
                 .map(MatchResponse::from);
     }
 
+    /** Fetch a single match by ID. */
     public MatchResponse getById(UUID id) {
         return MatchResponse.from(findOrThrow(id));
     }
@@ -192,18 +211,21 @@ public class MatchService {
         return MatchResultResponse.from(result);
     }
 
+    /** Fetch the published result for a match, or throw if not yet published. */
     public MatchResultResponse getResult(UUID matchId) {
         return MatchResultResponse.from(
                 matchResultRepository.findByMatch_Id(matchId)
                         .orElseThrow(() -> new ResourceNotFoundException("Result not yet published for match", matchId)));
     }
 
+    /** Load a non-deleted match or throw {@link com.familyleague.common.exception.ResourceNotFoundException}. */
     public Match findOrThrow(UUID id) {
         return matchRepository.findById(id)
                 .filter(m -> !m.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("Match", id));
     }
 
+    /** Guard: throws 422 if the season is CLOSED. Used before any write operation. */
     private void requireSeasonOpen(Season season) {
         if (season.getStatus() == Season.SeasonStatus.CLOSED) {
             throw new AppException(

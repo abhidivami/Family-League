@@ -12,6 +12,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Handles user profile reads and updates for authenticated users.
+ *
+ * <p>Password changes require both {@code currentPassword} and {@code newPassword};
+ * supplying only one is rejected with 400. An incorrect current password returns 422.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -19,11 +25,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /** Return the profile of the currently authenticated user. */
     @Transactional(readOnly = true)
     public UserProfileResponse getProfile(String username) {
         return UserProfileResponse.from(loadUser(username));
     }
 
+    /**
+     * Update displayName, avatarUrl, and/or password for the given user.
+     * Null fields in the request are ignored (partial update semantics).
+     */
     @Transactional
     public UserProfileResponse updateProfile(String username, UpdateProfileRequest req) {
         User user = loadUser(username);

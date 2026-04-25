@@ -28,6 +28,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
+    /** BCrypt-hashed password; never exposed in API responses. */
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -41,6 +42,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "role", nullable = false, length = 20)
     private Role role;
 
+    /** False for suspended accounts; also checked by {@link #isEnabled()}. */
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

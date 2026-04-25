@@ -24,6 +24,20 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Manages players and their assignment to season-team squads.
+ *
+ * <p>A {@link com.familyleague.player.entity.Player} is a global record (name, DOB, role etc.).
+ * A {@link com.familyleague.season.entity.SeasonTeamPlayer} links a player to a specific
+ * team for one season, carrying the jersey number and squad/playing-XI flags.
+ *
+ * <p>Constraints enforced here:
+ * <ul>
+ *   <li>Squad size ≤ {@value MAX_SQUAD_SIZE} per team per season</li>
+ *   <li>A player cannot be added to a squad if the season is CLOSED</li>
+ *   <li>Duplicate squad entries are rejected with 409</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
@@ -34,6 +48,7 @@ public class PlayerService {
     private final SeasonTeamPlayerRepository seasonTeamPlayerRepository;
     private final SeasonTeamRepository seasonTeamRepository;
 
+    /** Create a new global player record (not yet assigned to any team). */
     @Transactional
     public PlayerResponse createPlayer(PlayerRequest req) {
         Player player = Player.builder()
@@ -48,6 +63,7 @@ public class PlayerService {
         return PlayerResponse.from(playerRepository.save(player));
     }
 
+    /** Search players by name (case-insensitive) or list all if search is blank. */
     public Page<PlayerResponse> listPlayers(String search, Pageable pageable) {
         if (StringUtils.hasText(search)) {
             return playerRepository
