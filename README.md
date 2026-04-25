@@ -15,7 +15,7 @@ A Spring Boot REST API for running an IPL prediction game. Users predict match o
 ### 1. Clone
 
 ```bash
-git clone https://github.com/abhidivami/Family-League.git
+git clone [https://github.com/abhidivami/Family-League.git](https://github.com/abhidivami/Family-League.git)
 cd FamilyLeague
 ```
 
