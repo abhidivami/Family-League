@@ -2,11 +2,13 @@ package com.familyleague.player.service;
 
 import com.familyleague.common.exception.AppException;
 import com.familyleague.common.exception.ResourceNotFoundException;
+import com.familyleague.player.dto.PlayerHistoryEntry;
 import com.familyleague.player.dto.PlayerRequest;
 import com.familyleague.player.dto.PlayerResponse;
 import com.familyleague.player.dto.SquadPlayerResponse;
 import com.familyleague.player.entity.Player;
 import com.familyleague.player.repository.PlayerRepository;
+import com.familyleague.season.entity.Season;
 import com.familyleague.season.entity.SeasonTeam;
 import com.familyleague.season.entity.SeasonTeamPlayer;
 import com.familyleague.season.repository.SeasonTeamPlayerRepository;
@@ -69,6 +71,12 @@ public class PlayerService {
         SeasonTeam seasonTeam = seasonTeamRepository.findById(seasonTeamId)
                 .orElseThrow(() -> new ResourceNotFoundException("SeasonTeam", seasonTeamId));
 
+        if (seasonTeam.getSeason().getStatus() == Season.SeasonStatus.CLOSED) {
+            throw new AppException(
+                "Season '" + seasonTeam.getSeason().getName() + "' is closed. No changes are allowed.",
+                HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
         Player player = findOrThrow(playerId);
 
         long current = seasonTeamPlayerRepository.countBySeasonTeam_IdAndActiveTrue(seasonTeamId);
@@ -105,5 +113,14 @@ public class PlayerService {
         return playerRepository.findById(id)
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("Player", id));
+    }
+
+    /** Returns the player's season-team history ordered by season year descending. */
+    @Transactional(readOnly = true)
+    public List<PlayerHistoryEntry> getPlayerHistory(UUID playerId) {
+        findOrThrow(playerId); // validates player exists
+        return seasonTeamPlayerRepository.findByPlayer_Id(playerId).stream()
+                .map(PlayerHistoryEntry::from)
+                .toList();
     }
 }

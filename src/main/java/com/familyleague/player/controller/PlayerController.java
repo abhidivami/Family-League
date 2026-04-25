@@ -2,6 +2,7 @@ package com.familyleague.player.controller;
 
 import com.familyleague.common.response.ApiResponse;
 import com.familyleague.common.response.PagedResponse;
+import com.familyleague.player.dto.PlayerHistoryEntry;
 import com.familyleague.player.dto.PlayerRequest;
 import com.familyleague.player.dto.PlayerResponse;
 import com.familyleague.player.dto.SquadPlayerResponse;
@@ -56,6 +57,12 @@ public class PlayerController {
     @GetMapping("/api/players/{id}")
     public ResponseEntity<ApiResponse<PlayerResponse>> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(playerService.getPlayerById(id)));
+    }
+
+    @Operation(summary = "Get player's season-team history")
+    @GetMapping("/api/players/{id}/history")
+    public ResponseEntity<ApiResponse<List<PlayerHistoryEntry>>> getHistory(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(playerService.getPlayerHistory(id)));
     }
 
     // ── Squad management ─────────────────────────────────────

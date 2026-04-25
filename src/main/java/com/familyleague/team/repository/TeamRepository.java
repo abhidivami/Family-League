@@ -14,4 +14,6 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
     Page<Team> findByDeletedAtIsNull(Pageable pageable);
 
     Page<Team> findByNameContainingIgnoreCaseAndDeletedAtIsNull(String name, Pageable pageable);
+
+    boolean existsByNameIgnoreCaseAndDeletedAtIsNull(String name);
 }

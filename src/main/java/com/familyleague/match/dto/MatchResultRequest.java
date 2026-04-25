@@ -1,14 +1,15 @@
 package com.familyleague.match.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 import java.util.UUID;
 
-/** Admin submits actual match result. */
+/**
+ * Admin submits actual match result.
+ * tossWinnerTeamId may be null if the match was abandoned before the toss.
+ */
 public record MatchResultRequest(
-    @NotNull UUID tossWinnerTeamId,
-    UUID matchWinnerTeamId,   // null if tie
-    UUID potmPlayerId,
+    UUID tossWinnerTeamId,    // null if abandoned before toss
+    UUID matchWinnerTeamId,   // null if tie or abandoned
+    UUID potmPlayerId,        // null if tie or abandoned
     boolean tie,
     String resultNotes
 ) {}

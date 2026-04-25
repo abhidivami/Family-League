@@ -57,7 +57,8 @@ public class MatchScoreTransactionService {
             short matchPoints = 0;
             short potmPoints = 0;
 
-            if (pred.getTossWinnerPick() != null
+            if (result.getTossWinnerTeam() != null
+                    && pred.getTossWinnerPick() != null
                     && pred.getTossWinnerPick().getId().equals(result.getTossWinnerTeam().getId())) {
                 tossPoints = 1;
             }

@@ -20,6 +20,17 @@ public interface SeasonTeamPlayerRepository extends JpaRepository<SeasonTeamPlay
     /** Count active squad players in a season-team (enforce 16-player squad limit). */
     long countBySeasonTeam_IdAndActiveTrue(UUID seasonTeamId);
 
+    /** All squad memberships for a player across all seasons (full history). */
+    @Query("""
+        SELECT stp FROM SeasonTeamPlayer stp
+        JOIN FETCH stp.seasonTeam st
+        JOIN FETCH st.season s
+        JOIN FETCH st.team
+        WHERE stp.player.id = :playerId
+        ORDER BY s.year DESC
+    """)
+    List<SeasonTeamPlayer> findByPlayer_Id(@Param("playerId") UUID playerId);
+
     /** All active players for a season (across all teams) — for POTM pick in predictions. */
     @Query("""
         SELECT stp FROM SeasonTeamPlayer stp

@@ -47,6 +47,7 @@ public class MatchService {
     @Transactional
     public MatchResponse createMatch(UUID seasonId, MatchRequest req) {
         Season season = seasonService.findOrThrow(seasonId);
+        requireSeasonOpen(season);
 
         SeasonTeam home = findSeasonTeamOrThrow(req.homeTeamId());
         SeasonTeam away = findSeasonTeamOrThrow(req.awayTeamId());
@@ -91,6 +92,7 @@ public class MatchService {
     @Transactional
     public void setPlayingXi(UUID matchId, UUID seasonTeamPlayerId, boolean isPlayingXi) {
         Match match = findOrThrow(matchId);
+        requireSeasonOpen(match.getSeason());
         SeasonTeamPlayer stp = seasonTeamPlayerRepository.findById(seasonTeamPlayerId)
                 .orElseThrow(() -> new ResourceNotFoundException("SeasonTeamPlayer", seasonTeamPlayerId));
 
@@ -124,6 +126,7 @@ public class MatchService {
     @Transactional
     public MatchResultResponse publishResult(UUID matchId, MatchResultRequest req) {
         Match match = findOrThrow(matchId);
+        requireSeasonOpen(match.getSeason());
 
         if (matchResultRepository.existsByMatch_Id(matchId)) {
             throw new AppException("Result already published for this match", HttpStatus.CONFLICT);
@@ -142,7 +145,8 @@ public class MatchService {
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        SeasonTeam tossWinner = findSeasonTeamOrThrow(req.tossWinnerTeamId());
+        SeasonTeam tossWinner = req.tossWinnerTeamId() != null
+                ? findSeasonTeamOrThrow(req.tossWinnerTeamId()) : null;
         SeasonTeam matchWinner = req.matchWinnerTeamId() != null
                 ? findSeasonTeamOrThrow(req.matchWinnerTeamId()) : null;
         SeasonTeamPlayer potm = null;
@@ -198,6 +202,14 @@ public class MatchService {
         return matchRepository.findById(id)
                 .filter(m -> !m.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("Match", id));
+    }
+
+    private void requireSeasonOpen(Season season) {
+        if (season.getStatus() == Season.SeasonStatus.CLOSED) {
+            throw new AppException(
+                "Season '" + season.getName() + "' is closed. No changes are allowed.",
+                HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     private SeasonTeam findSeasonTeamOrThrow(UUID id) {

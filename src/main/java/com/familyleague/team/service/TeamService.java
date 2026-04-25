@@ -39,6 +39,9 @@ public class TeamService {
 
     @Transactional
     public TeamResponse createTeam(TeamRequest req) {
+        if (teamRepository.existsByNameIgnoreCaseAndDeletedAtIsNull(req.name())) {
+            throw new AppException("A team named '" + req.name() + "' already exists", HttpStatus.CONFLICT);
+        }
         Team team = Team.builder()
                 .name(req.name())
                 .shortName(req.shortName())

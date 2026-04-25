@@ -25,8 +25,9 @@ public class MatchResult extends BaseEntity {
     @JoinColumn(name = "match_id", nullable = false, unique = true)
     private Match match;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "toss_winner_team_id", nullable = false)
+    /** Null when the match was abandoned before the toss took place. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "toss_winner_team_id")
     private SeasonTeam tossWinnerTeam;
 
     /** Null if the result is a tie (is_tie = true). */
