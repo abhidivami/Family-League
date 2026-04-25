@@ -6,7 +6,7 @@ A Spring Boot REST API for running an IPL prediction game. Users predict match o
 
 | Tool | Version |
 |---|---|
-| Java | 25+ |
+| Java | 17+ |
 | Maven | via `./mvnw` (included) |
 | PostgreSQL | 14+ |
 
@@ -15,7 +15,7 @@ A Spring Boot REST API for running an IPL prediction game. Users predict match o
 ### 1. Clone
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/abhidivami/Family-League.git
 cd FamilyLeague
 ```
 
